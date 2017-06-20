@@ -59,5 +59,12 @@
   - set_fact:
       grub_configuration_changed: "{{ grub_kernel_pinned|changed or grub_kernel_unpinned|changed }}"
 
+  - name: GRUB | Update grub to ensure /boot/grub/grub.cfg is up to date
+    shell: update-grub
+    when: grub_configuration_changed | bool
+    become: yes
+    tags:
+      - grub
+
   - debug: msg="PLEASE - VALIDATE CHANGES DONE AND REBOOT THE BOX"
     when: grub_configuration_changed | bool
