@@ -10,7 +10,8 @@
 
   roles:
      - {
-         role: "sa-grub"
+         role: "sa-grub",
+         grub_pin_kernel_version: "4.8.0-36-generic"
        }
 
 

@@ -4,3 +4,5 @@
 role_dir: "{{role_path}}"
 grub_old_kernel_version_file: /sa_grub_old_kernel_version.txt
 grub_pin_version_priority: 99 # in case of you have existing grub.d configurations
+
+option_write_kernel_version: false # write previous kernel version for rollback purposes
