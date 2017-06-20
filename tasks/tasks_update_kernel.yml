@@ -38,6 +38,14 @@
     tags:
       - grub
 
+  - name: GRUB | Detect menu entry
+    shell: awk -F\' '/menuentry / {print $2}' /boot/grub/grub.cfg | grep '4.8.0-36-generic$'
+    when: grub_pin_kernel_version is defined
+    register: grub_menu_entry
+
+  - set_fact:
+      grub_pin_kernel_version_menu_entry: "{{grub_menu_entry.stdout}}"
+
   - name: GRUB | Render grub configuration to pin kernel {{grub_pin_kernel_version}}
     template: src="{{role_dir}}/templates/grub.j2" dest="/etc/default/grub.d/{{ grub_pin_version_priority }}-grub-pin-kernel.cfg" group=root owner=root mode=0644
     when: grub_pin_kernel_version is defined
