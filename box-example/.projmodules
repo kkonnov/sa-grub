@@ -1,0 +1,4 @@
+[submodule "roles/sa-grub"]
+        path = roles/sa-grub
+        url = https://github.com/softasap/sa-grub.git
+

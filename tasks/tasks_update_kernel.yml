@@ -1,0 +1,63 @@
+---
+
+  - name: GRUB | Update grub to ensure /boot/grub/grub.cfg is up to date
+    shell: update-grub
+    become: yes
+    tags:
+      - always
+      - grub
+
+  - name: GRUB | Get available kernel releases
+    shell: 'cat /boot/grub/grub.cfg | grep menuentry | grep -oP \\d+\\.\\d+\\.\\d+-\\d+-\\w+ | sort -V -r | uniq'
+    become: yes
+    register: grub_kernel_releases_raw
+    tags:
+      - always
+      - grub
+
+  - name: GRUB | Parse release facts
+    set_fact:
+     grub_kernel_versions: "{{ grub_kernel_releases_raw.stdout.splitlines() }}"
+     grub_latest_kernel_version: "{{ grub_kernel_releases_raw.stdout.splitlines()[0] }}"
+    tags:
+      - always
+      - grub
+
+  - name: GRUB | Validate older kernel {{grub_pin_kernel_version}} still present on a server
+    fail: msg="kernel {{grub_pin_kernel_version}} is not available on the server"
+    when: grub_pin_kernel_version is defined and grub_pin_kernel_version not in grub_kernel_versions
+    tags:
+      - always
+      - grub
+
+  - debug: var="grub_kernel_versions"
+
+  - name: GRUB | Create /etc/default/grub.d
+    file: dest="/etc/default/grub.d" group=root owner=root mode=0755 state=directory
+    become: yes
+    tags:
+      - grub
+
+  - name: GRUB | Render grub configuration to pin kernel {{grub_pin_kernel_version}}
+    template: src="{{role_dir}}/templates/grub.j2" dest="/etc/default/grub.d/{{ grub_pin_version_priority }}-grub-pin-kernel.cfg" group=root owner=root mode=0644
+    when: grub_pin_kernel_version is defined
+    become: yes
+    register: grub_kernel_pinned
+    tags:
+      - grub
+
+    #  GRUB_DEFAULT=0  in  /etc/default/grub
+    # thus grub will boot most recent kernel
+  - name: GRUB | Remove grub configuration if grub_pin_kernel_version isn't set
+    file: dest="/etc/default/grub.d/{{ grub_pin_version_priority }}-grub-pin-kernel.cfg" state=absent
+    register: grub_kernel_unpinned
+    when: grub_pin_kernel_version is not defined
+    become: yes
+    tags:
+      - grub
+
+  - set_fact:
+      grub_configuration_changed: "{{ grub_kernel_pinned|changed or grub_kernel_unpinned|changed }}"
+
+  - debug: message="PLEASE - VALIDATE CHANGES DONE AND REBOOT THE BOX"
+    when: grub_configuration_changed | bool

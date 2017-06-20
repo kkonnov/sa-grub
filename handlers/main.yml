@@ -1,0 +1,8 @@
+---
+# handlers file for sa-grub
+
+  - name: update-grub
+    shell: update-grub
+    failed_when: ('error' in result_update_grub.stderr)
+    register: result_update_grub
+    become: yes

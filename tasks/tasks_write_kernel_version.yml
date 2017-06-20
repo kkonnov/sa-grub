@@ -1,0 +1,29 @@
+- name: GRUB | Check version rollback file {{ grub_old_kernel_version_file }} exists
+  stat:
+    path: "{{ grub_old_kernel_version_file }}"
+  register: exists_grub_old_kernel_version_file
+  become: yes
+  tags:
+    - always
+
+- set_fact:
+    option_write_kernel_version: "{{ option_write_kernel_version|default(not exists_grub_old_kernel_version_file.stat.exists) }}"
+  tags:
+    - always
+
+- name: GRUB | Refresh ansible kernel fact
+  setup:
+    filter: ansible_kernel
+  become: yes
+  tags:
+    - always
+
+
+- name: GRUB | backup current kernel version to file {{ grub_old_kernel_version_file }}
+  copy:
+    content: "{{ ansible_kernel }}"
+    dest: "{{ grub_old_kernel_version_file }}"
+  when: option_write_kernel_version|bool
+  become: yes
+  tags:
+    - always

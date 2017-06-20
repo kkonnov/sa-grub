@@ -1,0 +1,5 @@
+---
+# tasks file for sa-grub
+  - include: tasks_write_kernel_version.yml
+
+  - include: tasks_update_kernel.yml
